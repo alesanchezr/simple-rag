@@ -4,7 +4,9 @@ RAG module: Retrieval-Augmented Generation.
 This file handles everything related to RAG:
   1. Indexing documents into a vector database (setup)
   2. Finding relevant chunks for a question (retrieve)
-  3. Generating an answer with an LLM using that context (query)
+  3. Generating an answer with an LLM (generate)
+
+Graph orchestration lives in langgraph_layer.py.
 """
 
 import ollama
@@ -68,28 +70,33 @@ def retrieve(query: str, limit: int = 2) -> list[str]:
     return [r.payload["text"] for r in results.points]
 
 
-def query(user_query: str, limit: int = 2) -> dict:
+def generate(user_query: str, context: str) -> str:
     """
-    Full RAG pipeline: retrieve context, then generate an answer.
+    Generation step: call the LLM with retrieved context.
 
-    The LLM only sees the retrieved chunks — not the entire knowledge base.
+    The model only sees `context`, not the full knowledge base.
     """
-    context = "\n".join(retrieve(user_query, limit=limit))
-
-    # Augmentation: inject retrieved context into the prompt.
     prompt = (
         "Use the following context to answer the question.\n\n"
         f"Context:\n{context}\n\n"
         f"Question: {user_query}\n"
         "Answer:"
     )
-
-    # Generation: LLM produces the final response.
     resp = ollama.chat(
         model=CHAT_MODEL,
         messages=[{"role": "user", "content": prompt}],
     )
+    return resp["message"]["content"]
+
+
+def query(user_query: str, limit: int = 2) -> dict:
+    """
+    Full RAG pipeline: retrieve context, then generate an answer.
+
+    Convenience wrapper around retrieve + generate (no graph orchestration).
+    """
+    context = "\n".join(retrieve(user_query, limit=limit))
     return {
-        "answer": resp["message"]["content"],
+        "answer": generate(user_query, context),
         "context_used": context,
     }

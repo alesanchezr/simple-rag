@@ -1,6 +1,12 @@
 # Simple RAG
 
-Minimal RAG API with FastAPI, Ollama, and Qdrant.
+Minimal RAG API with FastAPI, Ollama, Qdrant, and LangGraph.
+
+## Project structure
+
+- `rag.py` — RAG primitives (embed, index, retrieve, generate)
+- `langgraph_layer.py` — LangGraph orchestration (retrieve → generate)
+- `api.py` — HTTP layer
 
 ## Requirements
 

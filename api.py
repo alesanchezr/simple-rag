@@ -1,8 +1,9 @@
-"""HTTP API layer. RAG logic lives in rag.py."""
+"""HTTP API layer. RAG logic lives in rag.py, orchestration in langgraph_layer.py."""
 
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+import langgraph_layer
 import rag
 
 app = FastAPI()
@@ -17,4 +18,4 @@ class Question(BaseModel):
 
 @app.post("/ask")
 def ask(body: Question):
-    return rag.query(body.query)
+    return langgraph_layer.run(body.query)
